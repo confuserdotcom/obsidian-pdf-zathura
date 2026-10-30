@@ -1,6 +1,6 @@
 {
   "name": "obsidian-pdf-zathura",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Zathura's keys in the PDF view: J/K pages, gg/G, zoom, marks, search, dark recolor, a status bar and last-page memory.",
   "main": "main.js",
   "private": true,

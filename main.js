@@ -79,7 +79,7 @@ class PdfZathura extends Plugin {
   onunload() {
     if (this.origOpenFile) WorkspaceLeaf.prototype.openFile = this.origOpenFile;
     this.macButtons(true);
-    clearTimeout(this.saveTimer);
+    window.clearTimeout(this.saveTimer);
     this.save();
     document.body.classList.remove("pz-recolor", "pz-nostatus", "pz-focus", "pz-study", "pz-split", "pz-pdf-active");
     document.querySelectorAll(".pz-status").forEach((el) => el.remove());
@@ -228,7 +228,7 @@ class PdfZathura extends Plugin {
     if (this.hooked.has(leaf.view)) return;
     const p = this.pdf(leaf);
     if (!p) { // still loading: try again shortly
-      if (tries < 40) setTimeout(() => this.attach(leaf, tries + 1), 250);
+      if (tries < 40) window.setTimeout(() => this.attach(leaf, tries + 1), 250);
       return;
     }
     this.hooked.add(p.v);
@@ -241,7 +241,7 @@ class PdfZathura extends Plugin {
       bar.setText(`${p.file.basename}   [${p.pv.currentPageNumber}/${p.pv.pagesCount}]   ${pct}%`);
       if (p.file) { this.state.pages[p.file.path] = p.pv.currentPageNumber; this.saveSoon(); }
     };
-    this.registerDomEvent(p.box, "scroll", () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    this.registerDomEvent(p.box, "scroll", () => { if (!raf) raf = window.requestAnimationFrame(update); }, { passive: true });
     // back to the last page read (zathura's database)
     const last = p.file && this.state.pages[p.file.path];
     if (last && last > 1 && p.pv.currentPageNumber === 1) p.pv.currentPageNumber = Math.min(last, p.pv.pagesCount);
@@ -249,8 +249,8 @@ class PdfZathura extends Plugin {
   }
 
   saveSoon() {
-    clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => this.save(), 1500);
+    window.clearTimeout(this.saveTimer);
+    this.saveTimer = window.setTimeout(() => this.save(), 1500);
   }
 
   // Vim Motions' global key handler, when that plugin runs: it owns g and Space sequences.
@@ -276,7 +276,7 @@ class PdfZathura extends Plugin {
     if (fb && t === fb.searchComponent?.inputEl && e.key === "Enter") {
       // like zathura: Enter searches, then keys go back to the page
       this.lastQuery = t.value;
-      setTimeout(() => { t.blur(); this.pdf()?.box.focus(); }, 0);
+      window.setTimeout(() => { t.blur(); this.pdf()?.box.focus(); }, 0);
       return;
     }
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
@@ -382,33 +382,66 @@ class PdfZathura extends Plugin {
   }
 }
 
+// Obsidian 1.13+ draws the settings tab from getSettingDefinitions() and lists every row in its
+// settings search; older versions call display(), which draws the same definitions here.
+function drawSettings(tab, defs, nested) {
+  const el = tab.containerEl;
+  if (!nested) el.empty();
+  for (const d of defs) {
+    if ((typeof d.visible === "function" ? d.visible() : d.visible) === false) continue;
+    if (d.type === "group") {
+      if (d.heading) new Setting(el).setName(d.heading).setHeading();
+      drawSettings(tab, d.items || [], true);
+      continue;
+    }
+    const row = new Setting(el).setName(d.name), c = d.control;
+    if (d.desc) row.setDesc(d.desc);
+    if (d.render) d.render(row);
+    if (!c) continue;
+    const value = tab.getControlValue(c.key) ?? c.defaultValue, ph = c.placeholder || "";
+    const commit = async (v, redraw) => {
+      if (c.validate && c.validate(v)) return;
+      await tab.setControlValue(c.key, v);
+      if (redraw) tab.display(); // the rows that hang on this one show or hide
+    };
+    if (c.type === "toggle") row.addToggle(t => t.setValue(!!value).onChange(v => commit(v, true)));
+    else if (c.type === "dropdown") row.addDropdown(t => t.addOptions(c.options).setValue(value).onChange(v => commit(v, true)));
+    else if (c.type === "number") row.addText(t => t.setPlaceholder(ph).setValue(String(value ?? "")).onChange(v => {
+      const n = Number(v);
+      if (v.trim() && Number.isFinite(n) && !(n < c.min) && !(n > c.max)) commit(n);
+    }));
+    else row.addText(t => t.setPlaceholder(ph).setValue(value ?? "").onChange(v => commit(v)));
+  }
+}
+
 class PdfZathuraSettings extends PluginSettingTab {
   constructor(app, plugin) { super(app, plugin); this.plugin = plugin; }
+  getControlValue(key) { return this.plugin.settings[key]; }
+  async setControlValue(key, value) { this.plugin.settings[key] = value; await this.plugin.saveSettings(); }
+  display() { drawSettings(this, this.getSettingDefinitions()); }
 
-  display() {
-    const { containerEl } = this, s = this.plugin.settings, save = () => this.plugin.saveSettings();
-    containerEl.empty();
-    const num = (name, desc, key, ph) => new Setting(containerEl).setName(name).setDesc(desc)
-      .addText(t => t.setPlaceholder(ph).setValue(String(s[key])).onChange(async v => { s[key] = v; await save(); }));
-    num("Scroll step", "Pixels moved by j and k.", "scrollStep", "100");
-    num("Sideways step", "Pixels moved by h and l.", "sideStep", "80");
-    num("Zoom step", "Factor applied by z and Z (1.1 = 10 %).", "zoomStep", "1.1");
-
-    new Setting(containerEl).setName("Global keys").setHeading();
-    new Setting(containerEl).setName("Alt+Tab and Ctrl+6: previous tab or pane").setDesc("Anywhere, even while typing: back to the tab or pane you were in (PDF ⇄ note), again to come back, like Vim's Ctrl-^. On macOS Alt is Option. The command works without this, bound to any hotkey.")
-      .addToggle(t => t.setValue(s.alternateKeys).onChange(async v => { s.alternateKeys = v; await save(); }));
-    new Setting(containerEl).setName("Alt+. and Alt+, drive the PDF from the note").setDesc("Half a page down / up in the PDF on screen while you type in the note beside it; with Shift, a whole page. The commands work without this, bound to any hotkey.")
-      .addToggle(t => t.setValue(s.remoteKeys).onChange(async v => { s.remoteKeys = v; await save(); }));
-
-    new Setting(containerEl).setName("Look").setHeading();
-    new Setting(containerEl).setName("Focus mode").setDesc("While a PDF is on screen, hide the sidebars, tabs, status bar and title bar; the PDF toolbar shows when you point at the top of the page.")
-      .addToggle(t => t.setValue(s.focusMode).onChange(async v => { s.focusMode = v; await save(); }));
-
-    new Setting(containerEl).setName("External program").setHeading();
-    new Setting(containerEl).setName("Program").setDesc("Open PDFs in this program instead of Obsidian's view (file list, links, [[book.pdf#page=12]], quick switcher), for example zathura. Turned on per device with the command \"Open PDFs in the external program on this device\". Empty: never.")
-      .addText(t => t.setPlaceholder("zathura").setValue(s.externalProgram).onChange(async v => { s.externalProgram = v; await save(); }));
-    new Setting(containerEl).setName("Arguments").setDesc("{file} is the PDF's full path, {page} the page of a #page=N link (a word with {page} is left out when there is none).")
-      .addText(t => t.setPlaceholder(DEFAULTS.externalArgs).setValue(s.externalArgs).onChange(async v => { s.externalArgs = v; await save(); }));
+  getSettingDefinitions() {
+    return [
+      { name: "Scroll step", desc: "Pixels moved by j and k.", control: { type: "number", key: "scrollStep", placeholder: "100", min: 10, max: 2000 } },
+      { name: "Sideways step", desc: "Pixels moved by h and l.", control: { type: "number", key: "sideStep", placeholder: "80", min: 10, max: 2000 } },
+      { name: "Zoom step", desc: "Factor applied by z and Z (1.1 = 10 %).", control: { type: "number", key: "zoomStep", placeholder: "1.1", min: 1.01, max: 3, step: 0.01 } },
+      { type: "group", heading: "Global keys", items: [
+        { name: "Alt+Tab and Ctrl+6: previous tab or pane", desc: "Anywhere, even while typing: back to the tab or pane you were in (PDF ⇄ note), again to come back, like Vim's Ctrl-^. On macOS Alt is Option. The command works without this, bound to any hotkey.",
+          control: { type: "toggle", key: "alternateKeys" } },
+        { name: "Alt+. and Alt+, drive the PDF from the note", desc: "Half a page down / up in the PDF on screen while you type in the note beside it; with Shift, a whole page. The commands work without this, bound to any hotkey.",
+          control: { type: "toggle", key: "remoteKeys" } },
+      ] },
+      { type: "group", heading: "Look", items: [
+        { name: "Focus mode", desc: "While a PDF is on screen, hide the sidebars, tabs, status bar and title bar; the PDF toolbar shows when you point at the top of the page.",
+          control: { type: "toggle", key: "focusMode" } },
+      ] },
+      { type: "group", heading: "External program", items: [
+        { name: "Program", desc: "Open PDFs in this program instead of Obsidian's view (file list, links, [[book.pdf#page=12]], quick switcher), for example zathura. Turned on per device with the command \"Open PDFs in the external program on this device\". Empty: never.",
+          control: { type: "text", key: "externalProgram", placeholder: "zathura" } },
+        { name: "Arguments", desc: "{file} is the PDF's full path, {page} the page of a #page=N link (a word with {page} is left out when there is none).",
+          control: { type: "text", key: "externalArgs", placeholder: DEFAULTS.externalArgs } },
+      ] },
+    ];
   }
 }
 
