@@ -1,4 +1,4 @@
-<img src="docs/readme/hero.svg" width="100%" alt="PDF Zathura Keys for Obsidian: J and K turn pages, 12G goes to page 12, i recolors the page dark, gg goes to the first page, and a status bar shows file, page and percent.">
+<img src="docs/readme/demo.webp" width="100%" alt="PDF Zathura Keys recorded in Obsidian: J and K turn pages, 5G, gg and G jump, i recolours the pages dark, / searches with n and N, Tab opens the table of contents, and a study split puts the PDF beside your notes.">
 
 <p align="center">
   <b>Read PDFs in Obsidian like it's zathura.</b><br>
@@ -22,11 +22,7 @@
 
 [Zathura](https://pwmt.org/projects/zathura/)'s keys in [Obsidian](https://obsidian.md)'s PDF view: read a book without touching the mouse. Also a dark recolor, a status bar, marks, last-page memory, and a study split that puts the PDF next to your notes.
 
-<details open>
-<summary><b>See it in a real vault</b> (recorded in Obsidian)</summary>
-<br>
-<p align="center"><img src="docs/demo.gif" alt="PDF Zathura Keys demo in Obsidian" width="100%"></p>
-</details>
+<p align="center">▶ <a href="docs/readme/demo.mp4"><b>Watch the full-quality video</b></a></p>
 
 ## Keys
 
