@@ -1,0 +1,53 @@
+% Sample book for the e2e test and the demo GIF:  pdflatex sample.tex  (twice, for the contents)
+\documentclass[11pt,oneside,openany]{book}
+\usepackage[a5paper,margin=18mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\title{\textbf{A Short Course in Analysis}}
+\author{Sample notes}
+\date{}
+\begin{document}
+\maketitle
+\tableofcontents
+\chapter{Sequences}
+\section{Convergence}
+\begin{definition}
+A sequence $(u_n)$ of real numbers \emph{converges} to $\ell$ if
+\[ \forall \varepsilon > 0,\ \exists N \in \mathbb{N},\ \forall n \ge N,\quad |u_n - \ell| < \varepsilon. \]
+\end{definition}
+\begin{example} The sequence $u_n = \dfrac{1}{n}$ converges to $0$: given $\varepsilon>0$, take $N > 1/\varepsilon$. \end{example}
+\begin{theorem}[Monotone convergence] Every increasing sequence bounded above converges, to $\sup_n u_n$. \end{theorem}
+\begin{proof} Let $\ell = \sup_n u_n$. For $\varepsilon > 0$ there is $N$ with $u_N > \ell - \varepsilon$, and then $\ell - \varepsilon < u_N \le u_n \le \ell$ for all $n \ge N$. \end{proof}
+\section{Cauchy sequences}
+\begin{definition} $(u_n)$ is a \emph{Cauchy sequence} if $\forall \varepsilon>0,\ \exists N,\ \forall p,q \ge N,\ |u_p-u_q|<\varepsilon$. \end{definition}
+\begin{theorem} In $\mathbb{R}$, a sequence converges if and only if it is a Cauchy sequence. \end{theorem}
+\begin{proof} A Cauchy sequence is bounded, so by Bolzano--Weierstrass it has a convergent subsequence $u_{\varphi(n)} \to \ell$; then
+\[ |u_n - \ell| \le |u_n - u_{\varphi(n)}| + |u_{\varphi(n)} - \ell| \longrightarrow 0. \qedhere \]
+\end{proof}
+\chapter{Series}
+\section{Definitions}
+\begin{definition} The series $\sum u_n$ converges if its partial sums $S_N = \sum_{n=0}^{N} u_n$ converge. \end{definition}
+\begin{example}[Geometric series] For $|q| < 1$, \[ \sum_{n=0}^{\infty} q^n = \frac{1}{1-q}. \] \end{example}
+\begin{example}[Harmonic series] $\displaystyle\sum_{n\ge1} \frac1n$ diverges, since $S_{2N} - S_N \ge \frac12$. \end{example}
+\section{The Basel problem}
+\begin{theorem}[Euler] \[ \sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}. \] \end{theorem}
+\begin{proof}[Idea] Compare the roots of $\dfrac{\sin x}{x} = \prod_{n \ge 1}\left(1 - \dfrac{x^2}{n^2\pi^2}\right)$ with its Taylor series $1 - \dfrac{x^2}{6} + \cdots$. \end{proof}
+\chapter{Continuity}
+\section{Limits of functions}
+\begin{definition} $f$ is continuous at $a$ if $\forall \varepsilon>0,\ \exists \delta>0,\ |x-a|<\delta \Rightarrow |f(x)-f(a)|<\varepsilon$. \end{definition}
+\begin{theorem}[Intermediate value] If $f$ is continuous on $[a,b]$ and $f(a) \le y \le f(b)$, there is $c \in [a,b]$ with $f(c) = y$. \end{theorem}
+\section{Uniform continuity}
+\begin{theorem}[Heine] A continuous function on a closed bounded interval is uniformly continuous. \end{theorem}
+\chapter{Integration}
+\section{Riemann sums}
+\[ \int_a^b f(x)\,dx = \lim_{n\to\infty} \frac{b-a}{n} \sum_{k=1}^{n} f\!\left(a + k\,\frac{b-a}{n}\right). \]
+\section{The Gaussian integral}
+\[ \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}. \]
+\begin{proof} Square it and switch to polar coordinates:
+\[ I^2 = \iint_{\mathbb{R}^2} e^{-(x^2+y^2)}\,dx\,dy = \int_0^{2\pi}\!\!\int_0^{\infty} e^{-r^2}\,r\,dr\,d\theta = \pi. \qedhere \]
+\end{proof}
+\end{document}

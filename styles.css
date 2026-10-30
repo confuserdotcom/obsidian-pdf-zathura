@@ -1,0 +1,44 @@
+/* PDF Zathura Keys. Override the variables in a CSS snippet to restyle. */
+body {
+  --pz-recolor-filter: invert(0.925) hue-rotate(180deg);   /* i: dark pages, colours keep their hue */
+  --pz-recolor-bg: #131313;
+  --pz-status-bg: #202020;
+  --pz-status-fg: #e2e2e2;
+}
+
+/* recolor (i) */
+body.pz-recolor .workspace-leaf-content[data-type="pdf"] .canvasWrapper { filter: var(--pz-recolor-filter); }
+body.pz-recolor .workspace-leaf-content[data-type="pdf"] .pdf-viewer-container { background: var(--pz-recolor-bg); }
+body.pz-recolor .workspace-leaf-content[data-type="pdf"] .pdfViewer .page { border-color: transparent; box-shadow: none; }
+
+/* status bar (b): file   [page/pages]   percent */
+.pz-status {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 15;
+  padding: 2px 12px;
+  font-family: var(--font-monospace); font-size: 12px;
+  background: var(--pz-status-bg); color: var(--pz-status-fg);
+  pointer-events: none; white-space: pre;
+  overflow: hidden; text-overflow: ellipsis;
+}
+body.pz-nostatus .pz-status { display: none; }
+
+/* Focus mode: while a PDF is on screen, only the pages (and the note beside them) stay. */
+body.pz-focus.pz-study .workspace-ribbon,
+body.pz-focus.pz-study .mod-left-split,
+body.pz-focus.pz-study .mod-right-split,
+body.pz-focus.pz-study .status-bar,
+body.pz-focus.pz-study .titlebar,
+body.pz-focus.pz-study .workspace-split.mod-root .workspace-tab-header-container { display: none !important; }
+body.pz-focus.pz-study .mod-root .workspace-leaf-content { position: relative; }
+body.pz-focus.pz-study .mod-root .workspace-leaf-content > .view-header,
+body.pz-focus.pz-study .workspace-leaf-content[data-type="pdf"] .pdf-toolbar {
+  position: absolute !important; left: 0; right: 0; z-index: 20; opacity: 0; transition: opacity 120ms;
+}
+body.pz-focus.pz-study .mod-root .workspace-leaf-content > .view-header { top: 0; }
+body.pz-focus.pz-study .workspace-leaf-content[data-type="pdf"] .pdf-toolbar { top: var(--header-height, 40px); }
+body.pz-focus.pz-study .mod-root .workspace-leaf-content > .view-header:hover,
+body.pz-focus.pz-study .workspace-leaf-content[data-type="pdf"] > .view-header:hover ~ .view-content .pdf-toolbar,
+body.pz-focus.pz-study .workspace-leaf-content[data-type="pdf"] .pdf-toolbar:hover,
+body.pz-focus.pz-study .workspace-leaf-content[data-type="pdf"] .pdf-toolbar:focus-within { opacity: 1; background: var(--background-primary); }
+body.pz-focus.pz-study .workspace-leaf-content[data-type="pdf"] > .view-content { padding: 0 !important; }
+body.pz-focus.pz-split .mod-root .workspace-leaf.mod-active { box-shadow: inset 0 2px 0 var(--interactive-accent); }

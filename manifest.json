@@ -1,0 +1,11 @@
+{
+  "id": "pdf-zathura",
+  "name": "PDF Zathura Keys",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Zathura's keys in the PDF view: J/K pages, gg/G, zoom, marks, search, dark recolor, a status bar and last-page memory.",
+  "author": "confuserdotcom",
+  "authorUrl": "https://github.com/confuserdotcom",
+  "fundingUrl": "https://confuserdotcom.lemonsqueezy.com",
+  "isDesktopOnly": true
+}
